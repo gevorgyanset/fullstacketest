@@ -1,74 +1,68 @@
-## Finding a Common Prefix Length
+# Stock Trades API Hard
 
-### Problem Statement
-Given a string, split the string into two substrings at every possible point. The rightmost substring is a suffix. The beginning of the string is the prefix. Determine the lengths of the common prefix between each suffix and the original string. Sum and return the lengths of the common prefixes. Return an array where each element i is the sum for string i.
-
-### Example
-Consider the only string in the array `inputs = ['abcabcd']`. Each suffix is compared to the original string.
-
-| Remove to leave suffix | Suffix  | Common Prefix | Length |
-|------------------------|---------|---------------|--------|
-| ''                     | abcabcd | abcabcd       | 7      |
-| 'a'                    | bcabcd  |               | 0      |
-| 'ab'                   | cabcd   |               | 0      |
-| 'abc'                  | abcd    | abc           | 3      |
-| 'abca'                 | bcd     |               | 0      |
-| 'abcab'                | cd      |               | 0      |
-| 'abcabc'               | d       |               | 0      |
-
-The sum is 7 + 0 + 0 + 3 + 0 + 0 + 0 = 10.
-
-### Function Description
-Complete the function `commonPrefix` in the editor below.
-
-`commonPrefix` has the following parameter(s):
-- `string inputs[n]`:  an array of strings
-
-Returns:
-- `int[]`: the sums of the common prefix lengths for each test case
-
-### Constraints
-- 1 ≤ n ≤ 10
-- 1 ≤ | inputs[i] | ≤ 10^5
-- Each `inputs[i]` contains only letters in the range ascii[a-z].
-
-### Input Format For Custom Testing
-The first line contains the number of test cases `n`.
-Each of the next `n` lines contains a string, `inputs[i]`, one for each test case.
-
-### Sample Case 0
-
-#### Sample Input
+## Data:
+Example of a trade data JSON object:
 ```
-ababaa
+{
+    "id":1,
+    "type": "buy",
+    "user_id": 23,
+    "symbol": "ABX",
+    "shares": 30,
+    "price": 134,
+    "timestamp": 1531522701000
+}
 ```
 
-#### Sample Output
+## Project Specifications:
+The task is to implement a model for the trade object and the REST service that exposes the `/trades` endpoint, which allows for managing the collection of trade records in the following way:
+
+**POST** request to `/trades`:
+
+- creates a new trade
+- expects a JSON trade object without an id property as a body payload. If the shares value is out of accepted range [1, 100], or the type value is invalid (i.e. not 'buy' or 'sell'), the API must return error code 400. Besides those cases, you can assume that the given payload is always valid.
+- adds the given trade object to the collection of trades and assigns a unique integer id to it. The first created trade must have id 1, the second one 2, and so on.
+- the response code is 201, and the response body is the created trade object
+
+**GET** request to `/trades`:
+
+- returns a collection of all trades
+- the response code is 200, and the response body is an array of all trades objects ordered by their ids in increasing order
+- optionally accepts query parameters type and user_id, for example `/trades?type=buy&&user_id=122`. All these parameters are optional. In case they are present, only objects matching the parameters must be returned.
+
+**GET** request to `/trades/<id>`:
+
+- returns a trade with the given id
+- if the matching trade exists, the response code is 200 and the response body is the matching trade object
+- if there is no trade with the given id in the collection, the response code is 404 with the body having the text `ID not found`
+
+**DELETE**, **PUT**, **PATCH** request to `/trades/<id>`:
+
+- the response code is 405 because the API does not allow deleting or modifying trades for any id value
+
+## Note:
+You are expected to choose the ORM you want to use and initialize the connection of the Database in the file `connection.js`. The following ORMs/Databases are available for use out of the box:
+1. Sequelize with SQLITE
+2. Mongoose with MongoDB
+
+
+## Environment 
+- Node Version: 14(LTS)
+- Default Port: 8000
+
+**Read Only Files**
+- `test/*`
+
+**Commands**
+- run: 
+```bash
+npm start
 ```
-11
+- install: 
+```bash
+npm install
 ```
-
-#### Explanation
-`n = 1`
-`inputs = ['ababaa']`
-
-The suffixes are `['ababaa', 'babaa', 'abaa', 'baa', 'aa', 'a']`. The common prefix lengths of each of these suffixes with the original string are `[6, 0, 3, 0, 1, 1]` respectively, and they sum to 11.
-
-### Sample Case 1
-
-#### Sample Input
-
+- test: 
+```bash
+npm test
 ```
-aa
-```
-
-#### Sample Output
-```
-3
-```
-
-#### Explanation
-`n = 1`
-`inputs = ['aa']`
-
-The suffixes are `['aa', 'a']`. The common prefix lengths of each of these suffixes with the original string are `[2, 1]` which sum to 3.
