@@ -1,68 +1,62 @@
-# Stock Trades API Hard
+# Transforming Single Consumer Web-Based Platform into a SaaS
 
-## Data:
-Example of a trade data JSON object:
+## Overview
+A web-based gaming platform (`gPlatform`) currently provides its services to a single gaming site (`gSite`). The services include hosting web games and back office functionalities for managing players who sign up and play on `gSite`. The goal is to transform `gPlatform` into a SaaS model, allowing multiple gaming sites to use the platform under different domains.
+
+## Key Questions and Solutions
+
+### 1. How can we design the system so that every company can serve games on their gaming site from their domain?
+
+**Solution:**
+- **Multi-Tenancy Architecture:** Implement logical isolation of data using a `tenant_id` column in a shared database. Consider physical isolation with separate databases for each company if needed for stronger isolation and security.
+- **Custom Domain Support:** Implement a routing layer that directs requests to the appropriate tenant's instance based on the domain name. Configure DNS settings to point each custom domain to the platform's IP address or load balancer.
+
+### 2. What modifications should be done to the users table at `gPlatform` to support this change?
+
+**Solution:**
+- **Add `tenant_id` Column:**
+  ```sql
+  CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INT NOT NULL,
+    UNIQUE (email, tenant_id)
+  );
+In this structure:
+
+email is unique within the context of a tenant.
+tenant_id links the user to their respective company.
+
+### 3. Considering we have one backend cluster that serves all companies, how can we validate a user login on one gaming domain in such a way that it does not give access to a different gaming domain?
+**Solution:**
+
+JWT Tokens: Use JSON Web Tokens (JWT) that include the tenant_id as part of the payload. When a user logs in, the generated JWT token should contain their tenant_id.
+Validation Middleware: Implement middleware to validate JWT tokens on each request. The middleware should ensure the tenant_id in the token matches the tenant_id of the requested domain.
+Domain Validation: Cross-check the tenant_id from the JWT token with the domain to ensure they match. If there is a mismatch, deny access.
+Example middleware for validating user access:
+
 ```
-{
-    "id":1,
-    "type": "buy",
-    "user_id": 23,
-    "symbol": "ABX",
-    "shares": 30,
-    "price": 134,
-    "timestamp": 1531522701000
+const jwt = require('jsonwebtoken');
+const { getTenantByDomain } = require('./tenantService');
+
+function authenticateToken(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.sendStatus(401);
+
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+
+        const tenantIdFromToken = user.tenant_id;
+        const tenantIdFromDomain = getTenantByDomain(req.hostname);
+
+        if (tenantIdFromToken !== tenantIdFromDomain) {
+            return res.sendStatus(403);
+        }
+
+        req.user = user;
+        next();
+    });
 }
-```
-
-## Project Specifications:
-The task is to implement a model for the trade object and the REST service that exposes the `/trades` endpoint, which allows for managing the collection of trade records in the following way:
-
-**POST** request to `/trades`:
-
-- creates a new trade
-- expects a JSON trade object without an id property as a body payload. If the shares value is out of accepted range [1, 100], or the type value is invalid (i.e. not 'buy' or 'sell'), the API must return error code 400. Besides those cases, you can assume that the given payload is always valid.
-- adds the given trade object to the collection of trades and assigns a unique integer id to it. The first created trade must have id 1, the second one 2, and so on.
-- the response code is 201, and the response body is the created trade object
-
-**GET** request to `/trades`:
-
-- returns a collection of all trades
-- the response code is 200, and the response body is an array of all trades objects ordered by their ids in increasing order
-- optionally accepts query parameters type and user_id, for example `/trades?type=buy&&user_id=122`. All these parameters are optional. In case they are present, only objects matching the parameters must be returned.
-
-**GET** request to `/trades/<id>`:
-
-- returns a trade with the given id
-- if the matching trade exists, the response code is 200 and the response body is the matching trade object
-- if there is no trade with the given id in the collection, the response code is 404 with the body having the text `ID not found`
-
-**DELETE**, **PUT**, **PATCH** request to `/trades/<id>`:
-
-- the response code is 405 because the API does not allow deleting or modifying trades for any id value
-
-## Note:
-You are expected to choose the ORM you want to use and initialize the connection of the Database in the file `connection.js`. The following ORMs/Databases are available for use out of the box:
-1. Sequelize with SQLITE
-2. Mongoose with MongoDB
-
-
-## Environment 
-- Node Version: 14(LTS)
-- Default Port: 8000
-
-**Read Only Files**
-- `test/*`
-
-**Commands**
-- run: 
-```bash
-npm start
-```
-- install: 
-```bash
-npm install
-```
-- test: 
-```bash
-npm test
 ```
