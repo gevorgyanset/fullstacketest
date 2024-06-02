@@ -1,17 +1,74 @@
-# Project Overview
+## Finding a Common Prefix Length
 
-This repository contains solutions to three different tasks. Each task has been implemented in a separate branch. Please refer to the respective branches for the solutions.
+### Problem Statement
+Given a string, split the string into two substrings at every possible point. The rightmost substring is a suffix. The beginning of the string is the prefix. Determine the lengths of the common prefix between each suffix and the original string. Sum and return the lengths of the common prefixes. Return an array where each element i is the sum for string i.
 
-## Task Solutions
+### Example
+Consider the only string in the array `inputs = ['abcabcd']`. Each suffix is compared to the original string.
 
-1. **Finding a Common Prefix Length**
-   - **Branch**: `Finding_a_Common_Prefix_Length`
-   - Description: The solution for finding the common prefix length is available in this branch. Switch to this branch to access the implementation.
+| Remove to leave suffix | Suffix  | Common Prefix | Length |
+|------------------------|---------|---------------|--------|
+| ''                     | abcabcd | abcabcd       | 7      |
+| 'a'                    | bcabcd  |               | 0      |
+| 'ab'                   | cabcd   |               | 0      |
+| 'abc'                  | abcd    | abc           | 3      |
+| 'abca'                 | bcd     |               | 0      |
+| 'abcab'                | cd      |               | 0      |
+| 'abcabc'               | d       |               | 0      |
 
-2. **NodeJS Stock Trades API**
-   - **Branch**: `NodeJS_Stock_Trades_API`
-   - Description: This branch contains the implementation of a NodeJS API for stock trades. Please switch to this branch to explore the API.
+The sum is 7 + 0 + 0 + 3 + 0 + 0 + 0 = 10.
 
-3. **Turning a Single Consumer Web-Based Platform into a SaaS**
-   - **Branch**: `Turning_a_single_consumer_web_based_Platforms_into_a_SaaS`
-   - Description: The solution for converting a single consumer web-based platform into a SaaS is available in this branch. Check this branch for the detailed implementation.
+### Function Description
+Complete the function `commonPrefix` in the editor below.
+
+`commonPrefix` has the following parameter(s):
+- `string inputs[n]`:  an array of strings
+
+Returns:
+- `int[]`: the sums of the common prefix lengths for each test case
+
+### Constraints
+- 1 ≤ n ≤ 10
+- 1 ≤ | inputs[i] | ≤ 10^5
+- Each `inputs[i]` contains only letters in the range ascii[a-z].
+
+### Input Format For Custom Testing
+The first line contains the number of test cases `n`.
+Each of the next `n` lines contains a string, `inputs[i]`, one for each test case.
+
+### Sample Case 0
+
+#### Sample Input
+```
+ababaa
+```
+
+#### Sample Output
+```
+11
+```
+
+#### Explanation
+`n = 1`
+`inputs = ['ababaa']`
+
+The suffixes are `['ababaa', 'babaa', 'abaa', 'baa', 'aa', 'a']`. The common prefix lengths of each of these suffixes with the original string are `[6, 0, 3, 0, 1, 1]` respectively, and they sum to 11.
+
+### Sample Case 1
+
+#### Sample Input
+
+```
+aa
+```
+
+#### Sample Output
+```
+3
+```
+
+#### Explanation
+`n = 1`
+`inputs = ['aa']`
+
+The suffixes are `['aa', 'a']`. The common prefix lengths of each of these suffixes with the original string are `[2, 1]` which sum to 3.
